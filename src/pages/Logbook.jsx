@@ -2,22 +2,42 @@ import { useMemo, useState } from 'react';
 import { useApp } from '../store/AppContext';
 import { MUSCLE_GROUPS } from '../lib/workoutPrograms';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Plus, Trash2, Search, Trophy } from 'lucide-react';
+import { Plus, Trash2, Search, Trophy, ClipboardList } from 'lucide-react';
 
 function emptySet() { return { reps: '', weight: '', rpe: '' }; }
 function emptyExercise() { return { name: '', muscle: 'Brust', sets: [emptySet()], note: '' }; }
+
+// Übernimmt einen Trainingstag aus dem generierten Plan als Vorlage für die Logbuch-Übungen.
+function exercisesFromPlanDay(day) {
+  return day.exercises.map((ex) => ({
+    name: ex.name,
+    muscle: ex.muscle,
+    sets: Array.from({ length: Number(ex.sets) || 1 }, () => emptySet()),
+    note: '',
+  }));
+}
 
 function sessionVolume(session) {
   return session.exercises.reduce((sum, ex) => sum + ex.sets.reduce((s, set) => s + (Number(set.reps) || 0) * (Number(set.weight) || 0), 0), 0);
 }
 
 export default function Logbook() {
-  const { logs, addLog, deleteLog, todayStr } = useApp();
+  const { logs, addLog, deleteLog, todayStr, plan } = useApp();
   const [date, setDate] = useState(todayStr());
   const [type, setType] = useState('');
   const [exercises, setExercises] = useState([emptyExercise()]);
   const [search, setSearch] = useState('');
   const [selectedExercise, setSelectedExercise] = useState('');
+  const [planDayChoice, setPlanDayChoice] = useState('');
+
+  const applyPlanDay = (dayName) => {
+    setPlanDayChoice(dayName);
+    if (!dayName || !plan) return;
+    const day = plan.days.find((d) => d.name === dayName);
+    if (!day) return;
+    setType(day.name);
+    setExercises(exercisesFromPlanDay(day));
+  };
 
   const updateExercise = (idx, next) => setExercises((prev) => prev.map((e, i) => (i === idx ? next : e)));
   const addExercise = () => setExercises((prev) => [...prev, emptyExercise()]);
@@ -47,6 +67,7 @@ export default function Logbook() {
     await addLog({ date, type: type || 'Training', exercises: cleanExercises });
     setType('');
     setExercises([emptyExercise()]);
+    setPlanDayChoice('');
   };
 
   const filteredLogs = useMemo(() => {
@@ -87,6 +108,17 @@ export default function Logbook() {
       </div>
 
       <div className="card">
+        {plan && plan.days?.length > 0 && (
+          <div className="flex items-center gap-2 mb-4 flex-wrap">
+            <ClipboardList size={16} color="var(--accent)" />
+            <span className="text-sm" style={{ color: 'var(--text-muted)' }}>Aus Trainingsplan übernehmen:</span>
+            <select className="input w-56" value={planDayChoice} onChange={(e) => applyPlanDay(e.target.value)}>
+              <option value="">Trainingstag wählen…</option>
+              {plan.days.map((d) => <option key={d.name} value={d.name}>{d.name}</option>)}
+            </select>
+          </div>
+        )}
+
         <div className="grid sm:grid-cols-2 gap-3 mb-4">
           <div>
             <label className="label">Datum</label>
