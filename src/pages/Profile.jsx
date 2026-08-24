@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useApp } from '../store/AppContext';
 import { calcBMI, bmiCategory, calcTargetCalories } from '../lib/calculations';
 import { Activity, Flame } from 'lucide-react';
+import NotificationSettings from '../components/NotificationSettings';
 
 const GOALS = ['Muskelaufbau', 'Kraft', 'Abnehmen', 'Ausdauer', 'Allgemeine Fitness'];
 const EQUIPMENT = ['Gym', 'Homegym', 'Nur Körpergewicht'];
@@ -120,6 +121,8 @@ export default function Profile() {
           </p>
         </div>
       </div>
+
+      <NotificationSettings />
     </div>
   );
 }
