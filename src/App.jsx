@@ -7,6 +7,7 @@ import Plan from './pages/Plan';
 import Logbook from './pages/Logbook';
 import Nutrition from './pages/Nutrition';
 import Devices from './pages/Devices';
+import RunningPlan from './pages/RunningPlan';
 
 function Gate({ children }) {
   const { ready } = useApp();
@@ -33,6 +34,7 @@ export default function App() {
               <Route path="/logbuch" element={<Logbook />} />
               <Route path="/ernaehrung" element={<Nutrition />} />
               <Route path="/geraete" element={<Devices />} />
+              <Route path="/laufplan" element={<RunningPlan />} />
             </Route>
           </Routes>
         </HashRouter>

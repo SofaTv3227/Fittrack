@@ -1,10 +1,11 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { LayoutDashboard, User, Dumbbell, NotebookPen, Apple, Watch, Flame } from 'lucide-react';
+import { LayoutDashboard, User, Dumbbell, NotebookPen, Apple, Watch, Flame, Footprints } from 'lucide-react';
 
 const NAV = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/profil', label: 'Profil', icon: User },
   { to: '/plan', label: 'Trainingsplan', icon: Dumbbell },
+  { to: '/laufplan', label: 'Laufplan', icon: Footprints },
   { to: '/logbuch', label: 'Logbuch', icon: NotebookPen },
   { to: '/ernaehrung', label: 'Ernährung', icon: Apple },
   { to: '/geraete', label: 'Geräte', icon: Watch },
