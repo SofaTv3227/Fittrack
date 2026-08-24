@@ -1,32 +1,34 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useApp } from '../store/AppContext';
-import { MUSCLE_GROUPS } from '../lib/workoutPrograms';
 import { exportPlanToPdf } from '../lib/pdf';
-import { Plus, Trash2, RefreshCw, Download, PenLine } from 'lucide-react';
-
-function ExerciseRow({ ex, onChange, onDelete }) {
-  return (
-    <div className="grid grid-cols-[1fr_auto] sm:grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] gap-2 items-center py-2 border-b last:border-0"
-      style={{ borderColor: 'var(--border)' }}>
-      <input className="input" value={ex.name} onChange={(e) => onChange({ ...ex, name: e.target.value })} />
-      <select className="input hidden sm:block" value={ex.muscle} onChange={(e) => onChange({ ...ex, muscle: e.target.value })}>
-        {MUSCLE_GROUPS.map((m) => <option key={m}>{m}</option>)}
-      </select>
-      <input className="input hidden sm:block" value={ex.sets} onChange={(e) => onChange({ ...ex, sets: e.target.value })} placeholder="Sätze" />
-      <input className="input hidden sm:block" value={ex.reps} onChange={(e) => onChange({ ...ex, reps: e.target.value })} placeholder="Wdh." />
-      <input className="input hidden sm:block" value={ex.rest} onChange={(e) => onChange({ ...ex, rest: e.target.value })} placeholder="Pause" />
-      <button className="btn btn-ghost btn-danger btn-sm" onClick={onDelete}><Trash2 size={15} /></button>
-    </div>
-  );
-}
+import { planStats, estimateDayMinutes, dayMuscleGroups, formatMinutes } from '../lib/planStats';
+import ExerciseRow from '../components/ExerciseRow';
+import { Plus, RefreshCw, Download, PenLine, Check, Trash2, Dumbbell, ListChecks, CalendarDays, Clock3, Layers } from 'lucide-react';
 
 function emptyDay(n) {
   return { name: `Tag ${n}`, exercises: [] };
 }
 
+function StatChip({ icon: Icon, label, value }) {
+  return (
+    <div className="flex items-center gap-2.5 px-3 py-2">
+      <Icon size={16} color="var(--accent)" />
+      <div className="leading-tight">
+        <div className="text-sm font-bold">{value}</div>
+        <div className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{label}</div>
+      </div>
+    </div>
+  );
+}
+
 export default function Plan() {
   const { profile, plan, savePlan, regeneratePlan } = useApp();
   const [busy, setBusy] = useState(false);
+  const [editingDay, setEditingDay] = useState(null);
+  const [dragSrc, setDragSrc] = useState(null); // { dayIdx, exIdx }
+  const [dragOver, setDragOver] = useState(null); // { dayIdx, exIdx }
+
+  const stats = useMemo(() => planStats(plan), [plan]);
 
   const handleRegenerate = async () => {
     setBusy(true);
@@ -76,6 +78,25 @@ export default function Plan() {
     savePlan({ ...plan, days });
   };
 
+  // Reihenfolge nur bei tatsächlichem Drop verändern — sonst bleibt die bestehende Reihenfolge unangetastet.
+  const handleDrop = (dayIdx, exIdx) => {
+    if (!dragSrc || dragSrc.dayIdx !== dayIdx || dragSrc.exIdx === exIdx) {
+      setDragSrc(null);
+      setDragOver(null);
+      return;
+    }
+    const days = plan.days.map((d, i) => {
+      if (i !== dayIdx) return d;
+      const exercises = [...d.exercises];
+      const [moved] = exercises.splice(dragSrc.exIdx, 1);
+      exercises.splice(exIdx, 0, moved);
+      return { ...d, exercises };
+    });
+    savePlan({ ...plan, days });
+    setDragSrc(null);
+    setDragOver(null);
+  };
+
   if (!plan) {
     return (
       <div className="animate-in card text-center py-16 flex flex-col items-center gap-3">
@@ -94,13 +115,14 @@ export default function Plan() {
 
   return (
     <div className="animate-in flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      {/* Header */}
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold">{plan.name}</h1>
-          <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
+          <h1 className="text-3xl font-extrabold tracking-tight">{plan.name}</h1>
+          <p className="text-sm mt-1.5" style={{ color: 'var(--text-muted)' }}>
             {plan.key === 'custom'
               ? 'Selbst erstellter Trainingsplan'
-              : `Basierend auf: ${profile.goal} · ${profile.experience} · ${profile.daysPerWeek} Tage/Woche`}
+              : `${profile.goal} · ${profile.experience} · ${profile.daysPerWeek} Tage/Woche`}
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
@@ -116,42 +138,97 @@ export default function Plan() {
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-4">
-        {plan.days.map((day, dayIdx) => (
-          <div key={dayIdx} className="card">
-            <div className="flex items-center gap-2 mb-3">
-              <input
-                className="input font-bold flex-1"
-                value={day.name}
-                onChange={(e) => updateDayName(dayIdx, e.target.value)}
-              />
-              {plan.days.length > 1 && (
-                <button className="btn btn-ghost btn-danger btn-sm" onClick={() => deleteDay(dayIdx)}>
-                  <Trash2 size={15} />
-                </button>
-              )}
+      {/* Statistikleiste */}
+      {stats && (
+        <div className="card flex flex-wrap gap-x-1 gap-y-2" style={{ padding: 8 }}>
+          <StatChip icon={Layers} label="Sätze gesamt" value={stats.totalSets} />
+          <StatChip icon={Dumbbell} label="Übungen insgesamt" value={stats.exerciseCount} />
+          <StatChip icon={CalendarDays} label="Trainingstage" value={stats.dayCount} />
+          <StatChip icon={Clock3} label="Geschätzte Dauer" value={formatMinutes(stats.totalMinutes)} />
+          <StatChip icon={ListChecks} label="Muskelgruppen" value={stats.muscleGroupCount} />
+        </div>
+      )}
+
+      {/* Trainingstage */}
+      <div className="grid md:grid-cols-2 gap-5">
+        {plan.days.map((day, dayIdx) => {
+          const muscles = dayMuscleGroups(day);
+          const minutes = estimateDayMinutes(day);
+          const isEditing = editingDay === dayIdx;
+          return (
+            <div key={dayIdx} className="card flex flex-col gap-4">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  {isEditing ? (
+                    <div className="flex items-center gap-2">
+                      <input
+                        autoFocus
+                        className="input font-extrabold text-lg"
+                        value={day.name}
+                        onChange={(e) => updateDayName(dayIdx, e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && setEditingDay(null)}
+                      />
+                      <button className="btn btn-ghost btn-sm" onClick={() => setEditingDay(null)}><Check size={16} color="var(--green)" /></button>
+                    </div>
+                  ) : (
+                    <button className="flex items-center gap-2 group" onClick={() => setEditingDay(dayIdx)}>
+                      <span className="font-extrabold text-lg tracking-tight uppercase">{day.name}</span>
+                      <PenLine size={13} style={{ color: 'var(--text-muted)' }} />
+                    </button>
+                  )}
+                  <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                    {muscles.length > 0 ? muscles.join(' · ') : 'Noch keine Übungen'}
+                  </p>
+                </div>
+                {plan.days.length > 1 && (
+                  <button className="btn btn-ghost btn-sm shrink-0" style={{ color: 'var(--text-muted)' }} onClick={() => deleteDay(dayIdx)} title="Trainingstag löschen">
+                    <Trash2 size={14} />
+                  </button>
+                )}
+              </div>
+
+              <div className="flex gap-2">
+                <span className="chip">{day.exercises.length} Übungen</span>
+                {minutes > 0 && <span className="chip" style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)' }}>ca. {minutes} Min</span>}
+              </div>
+
+              <div>
+                {day.exercises.map((ex, exIdx) => (
+                  <div
+                    key={exIdx}
+                    draggable
+                    onDragStart={() => setDragSrc({ dayIdx, exIdx })}
+                    onDragOver={(e) => { e.preventDefault(); setDragOver({ dayIdx, exIdx }); }}
+                    onDrop={() => handleDrop(dayIdx, exIdx)}
+                    onDragEnd={() => { setDragSrc(null); setDragOver(null); }}
+                  >
+                    <ExerciseRow
+                      ex={ex}
+                      onChange={(next) => updateExercise(dayIdx, exIdx, next)}
+                      onDelete={() => deleteExercise(dayIdx, exIdx)}
+                      isDragging={dragSrc?.dayIdx === dayIdx && dragSrc?.exIdx === exIdx}
+                      isDropTarget={dragOver?.dayIdx === dayIdx && dragOver?.exIdx === exIdx && dragSrc?.exIdx !== exIdx}
+                    />
+                  </div>
+                ))}
+                {day.exercises.length === 0 && (
+                  <p className="text-sm py-3 text-center" style={{ color: 'var(--text-muted)' }}>Noch keine Übungen für diesen Tag.</p>
+                )}
+              </div>
+
+              <button
+                className="btn w-full justify-center"
+                style={{ borderStyle: 'dashed', color: 'var(--accent)', borderColor: 'var(--accent)', background: 'transparent' }}
+                onClick={() => addExercise(dayIdx)}
+              >
+                <Plus size={15} /> Übung hinzufügen
+              </button>
             </div>
-            <div>
-              {day.exercises.map((ex, exIdx) => (
-                <ExerciseRow
-                  key={exIdx}
-                  ex={ex}
-                  onChange={(next) => updateExercise(dayIdx, exIdx, next)}
-                  onDelete={() => deleteExercise(dayIdx, exIdx)}
-                />
-              ))}
-              {day.exercises.length === 0 && (
-                <p className="text-sm py-2" style={{ color: 'var(--text-muted)' }}>Noch keine Übungen für diesen Tag.</p>
-              )}
-            </div>
-            <button className="btn btn-ghost btn-sm mt-3" onClick={() => addExercise(dayIdx)}>
-              <Plus size={14} /> Übung hinzufügen
-            </button>
-          </div>
-        ))}
+          );
+        })}
 
         <button
-          className="card flex items-center justify-center gap-2 py-8 border-dashed"
+          className="card flex items-center justify-center gap-2 py-10"
           style={{ borderStyle: 'dashed', color: 'var(--text-muted)' }}
           onClick={addDay}
         >
