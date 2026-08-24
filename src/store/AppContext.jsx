@@ -31,10 +31,11 @@ export function AppProvider({ children }) {
   const [water, setWater] = useState([]);
   const [devices, setDevices] = useState([]);
   const [deviceData, setDeviceData] = useState([]);
+  const [bballLogs, setBballLogs] = useState([]);
 
   useEffect(() => {
     (async () => {
-      const [p, s, pl, l, f, r, m, w, d, dd] = await Promise.all([
+      const [p, s, pl, l, f, r, m, w, d, dd, bl] = await Promise.all([
         db.profile.get(TABLES.PROFILE_ID),
         db.settings.get(TABLES.SETTINGS_ID),
         db.plan.get(TABLES.PLAN_ID),
@@ -45,12 +46,13 @@ export function AppProvider({ children }) {
         db.water.toArray(),
         db.devices.toArray(),
         db.deviceData.toArray(),
+        db.bballLogs.toArray(),
       ]);
       if (p) setProfileState(p);
       if (s) setSettingsState(s);
       if (pl) setPlanState(pl);
       setLogs(l); setFoods(f); setRecipes(r); setMeals(m); setWater(w);
-      setDevices(d); setDeviceData(dd);
+      setDevices(d); setDeviceData(dd); setBballLogs(bl);
       setReady(true);
     })();
   }, []);
@@ -168,6 +170,18 @@ export function AppProvider({ children }) {
     setDeviceData(fresh);
   }, []);
 
+  // Basketball-Einzeltraining: abgeschlossene Sessions bleiben unabhängig von Plan-Auswahl erhalten.
+  const addBballLog = useCallback(async (log) => {
+    const id = await db.bballLogs.add(log);
+    const rec = { ...log, id };
+    setBballLogs((prev) => [...prev, rec]);
+    return rec;
+  }, []);
+  const deleteBballLog = useCallback(async (id) => {
+    await db.bballLogs.delete(id);
+    setBballLogs((prev) => prev.filter((l) => l.id !== id));
+  }, []);
+
   const targetCalories = useMemo(
     () => settings.calorieOverride ?? calcTargetCalories(profile),
     [profile, settings]
@@ -178,12 +192,13 @@ export function AppProvider({ children }) {
   );
 
   const value = {
-    ready, profile, settings, plan, logs, foods, recipes, meals, water, devices, deviceData,
+    ready, profile, settings, plan, logs, foods, recipes, meals, water, devices, deviceData, bballLogs,
     saveProfile, saveSettings, regeneratePlan, savePlan,
     addLog, updateLog, deleteLog,
     addFood, addRecipe, deleteRecipe,
     addMeal, updateMeal, deleteMeal,
     setWaterForDate, setDeviceState, saveDeviceData,
+    addBballLog, deleteBballLog,
     targetCalories, targetMacros, todayStr,
   };
 
