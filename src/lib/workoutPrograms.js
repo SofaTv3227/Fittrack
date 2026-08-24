@@ -3,143 +3,143 @@
 const ex = (name, muscle, sets, reps, rest) => ({ name, muscle, sets, reps, rest });
 
 const STRONGLIFTS_A = [
-  ex('Kniebeugen', 'Beine', 5, '5', '3 min'),
-  ex('Bankdrücken', 'Brust', 5, '5', '3 min'),
-  ex('Rudern vorgebeugt', 'Rücken', 5, '5', '3 min'),
+  ex('Kniebeugen', 'Beine', 2, '5', '3 min'),
+  ex('Bankdrücken', 'Brust', 2, '5', '3 min'),
+  ex('Rudern vorgebeugt', 'Rücken', 2, '5', '3 min'),
 ];
 const STRONGLIFTS_B = [
-  ex('Kniebeugen', 'Beine', 5, '5', '3 min'),
-  ex('Schulterdrücken', 'Schultern', 5, '5', '3 min'),
-  ex('Kreuzheben', 'Beine', 1, '5', '3-5 min'),
+  ex('Kniebeugen', 'Beine', 2, '5', '3 min'),
+  ex('Schulterdrücken', 'Schultern', 2, '5', '3 min'),
+  ex('Kreuzheben', 'Beine', 2, '5', '3-5 min'),
 ];
 
 const WENDLER_531 = (lift, accessories) => [
-  ex(lift, lift.includes('Kniebeuge') ? 'Beine' : lift.includes('Bankdrücken') ? 'Brust' : lift.includes('Kreuzheben') ? 'Beine' : 'Schultern', 3, '5/5/5+', '3 min'),
+  ex(lift, lift.includes('Kniebeuge') ? 'Beine' : lift.includes('Bankdrücken') ? 'Brust' : lift.includes('Kreuzheben') ? 'Beine' : 'Schultern', 2, '5/5/5+', '3 min'),
   ...accessories,
 ];
 
 const PHUL_UPPER_POWER = [
-  ex('Bankdrücken', 'Brust', 4, '3-5', '3 min'),
-  ex('Rudern vorgebeugt', 'Rücken', 4, '3-5', '3 min'),
-  ex('Schulterdrücken', 'Schultern', 3, '5-8', '2 min'),
-  ex('Klimmzüge', 'Rücken', 3, '5-8', '2 min'),
+  ex('Bankdrücken', 'Brust', 2, '3-5', '3 min'),
+  ex('Rudern vorgebeugt', 'Rücken', 2, '3-5', '3 min'),
+  ex('Schulterdrücken', 'Schultern', 2, '5-8', '2 min'),
+  ex('Klimmzüge', 'Rücken', 2, '5-8', '2 min'),
 ];
 const PHUL_LOWER_POWER = [
-  ex('Kniebeugen', 'Beine', 4, '3-5', '3 min'),
-  ex('Kreuzheben', 'Beine', 4, '3-5', '3 min'),
-  ex('Beinpresse', 'Beine', 3, '8-10', '2 min'),
-  ex('Wadenheben', 'Beine', 4, '10-12', '90 s'),
+  ex('Kniebeugen', 'Beine', 2, '3-5', '3 min'),
+  ex('Kreuzheben', 'Beine', 2, '3-5', '3 min'),
+  ex('Beinpresse', 'Beine', 2, '8-10', '2 min'),
+  ex('Wadenheben', 'Beine', 2, '10-12', '90 s'),
 ];
 const PHUL_UPPER_HYP = [
-  ex('Schrägbankdrücken', 'Brust', 4, '8-12', '90 s'),
-  ex('Latzug', 'Rücken', 4, '8-12', '90 s'),
-  ex('Seitheben', 'Schultern', 3, '12-15', '60 s'),
-  ex('Bizepscurls', 'Arme', 3, '10-12', '60 s'),
-  ex('Trizepsdrücken', 'Arme', 3, '10-12', '60 s'),
+  ex('Schrägbankdrücken', 'Brust', 2, '8-12', '90 s'),
+  ex('Latzug', 'Rücken', 2, '8-12', '90 s'),
+  ex('Seitheben', 'Schultern', 2, '12-15', '60 s'),
+  ex('Bizepscurls', 'Arme', 2, '10-12', '60 s'),
+  ex('Trizepsdrücken', 'Arme', 2, '10-12', '60 s'),
 ];
 const PHUL_LOWER_HYP = [
-  ex('Ausfallschritte', 'Beine', 3, '10-12', '90 s'),
-  ex('Beinstrecker', 'Beine', 3, '12-15', '60 s'),
-  ex('Beinbeuger', 'Beine', 3, '12-15', '60 s'),
-  ex('Wadenheben', 'Beine', 4, '15-20', '60 s'),
+  ex('Ausfallschritte', 'Beine', 2, '10-12', '90 s'),
+  ex('Beinstrecker', 'Beine', 2, '12-15', '60 s'),
+  ex('Beinbeuger', 'Beine', 2, '12-15', '60 s'),
+  ex('Wadenheben', 'Beine', 2, '15-20', '60 s'),
 ];
 
 const BRO_SPLIT = {
-  Brust: [ex('Bankdrücken', 'Brust', 4, '8-12', '90 s'), ex('Schrägbankdrücken', 'Brust', 4, '8-12', '90 s'), ex('Fliegende', 'Brust', 3, '12-15', '60 s'), ex('Dips', 'Brust', 3, '10-12', '90 s')],
-  Rücken: [ex('Klimmzüge', 'Rücken', 4, '8-12', '90 s'), ex('Rudern vorgebeugt', 'Rücken', 4, '8-12', '90 s'), ex('Latzug', 'Rücken', 3, '10-12', '90 s'), ex('Kreuzheben', 'Rücken', 3, '6-8', '2 min')],
-  Beine: [ex('Kniebeugen', 'Beine', 4, '8-12', '2 min'), ex('Beinpresse', 'Beine', 4, '10-12', '90 s'), ex('Beinstrecker', 'Beine', 3, '12-15', '60 s'), ex('Wadenheben', 'Beine', 4, '15-20', '60 s')],
-  Schultern: [ex('Schulterdrücken', 'Schultern', 4, '8-12', '90 s'), ex('Seitheben', 'Schultern', 4, '12-15', '60 s'), ex('Face Pulls', 'Schultern', 3, '15', '60 s')],
-  Arme: [ex('Bizepscurls', 'Arme', 4, '10-12', '60 s'), ex('Trizepsdrücken', 'Arme', 4, '10-12', '60 s'), ex('Hammercurls', 'Arme', 3, '10-12', '60 s'), ex('French Press', 'Arme', 3, '10-12', '60 s')],
+  Brust: [ex('Bankdrücken', 'Brust', 2, '8-12', '90 s'), ex('Schrägbankdrücken', 'Brust', 2, '8-12', '90 s'), ex('Fliegende', 'Brust', 2, '12-15', '60 s'), ex('Dips', 'Brust', 2, '10-12', '90 s')],
+  Rücken: [ex('Klimmzüge', 'Rücken', 2, '8-12', '90 s'), ex('Rudern vorgebeugt', 'Rücken', 2, '8-12', '90 s'), ex('Latzug', 'Rücken', 2, '10-12', '90 s'), ex('Kreuzheben', 'Rücken', 2, '6-8', '2 min')],
+  Beine: [ex('Kniebeugen', 'Beine', 2, '8-12', '2 min'), ex('Beinpresse', 'Beine', 2, '10-12', '90 s'), ex('Beinstrecker', 'Beine', 2, '12-15', '60 s'), ex('Wadenheben', 'Beine', 2, '15-20', '60 s')],
+  Schultern: [ex('Schulterdrücken', 'Schultern', 2, '8-12', '90 s'), ex('Seitheben', 'Schultern', 2, '12-15', '60 s'), ex('Face Pulls', 'Schultern', 2, '15', '60 s')],
+  Arme: [ex('Bizepscurls', 'Arme', 2, '10-12', '60 s'), ex('Trizepsdrücken', 'Arme', 2, '10-12', '60 s'), ex('Hammercurls', 'Arme', 2, '10-12', '60 s'), ex('French Press', 'Arme', 2, '10-12', '60 s')],
 };
 
 // ── Feste Pläne (Beginner/Fortgeschritten, Gym-Equipment) ──
 
 const GANZKOERPER_I = [
-  ex('Beinpresse', 'Beine', 3, '8-12', '2 min'),
-  ex('Latzug', 'Rücken', 3, '8-12', '1-2 min'),
-  ex('Brustpresse', 'Brust', 3, '8-12', '1-2 min'),
-  ex('Beinbeuger', 'Beine', 3, '8-12', '1-2 min'),
-  ex('Seitheben am Kabelzug', 'Schultern', 3, '12-15', '1-2 min'),
-  ex('Trizeps-Pulldown', 'Arme', 3, '8-12', '1 min'),
-  ex('Hyperextension', 'Rücken', 3, '12-15', '1 min'),
-  ex('Beinheben im Liegen', 'Core', 3, '15-20', '1 min'),
+  ex('Beinpresse', 'Beine', 2, '8-12', '2 min'),
+  ex('Latzug', 'Rücken', 2, '8-12', '1-2 min'),
+  ex('Brustpresse', 'Brust', 2, '8-12', '1-2 min'),
+  ex('Beinbeuger', 'Beine', 2, '8-12', '1-2 min'),
+  ex('Seitheben am Kabelzug', 'Schultern', 2, '12-15', '1-2 min'),
+  ex('Trizeps-Pulldown', 'Arme', 2, '8-12', '1 min'),
+  ex('Hyperextension', 'Rücken', 2, '12-15', '1 min'),
+  ex('Beinheben im Liegen', 'Core', 2, '15-20', '1 min'),
 ];
 const GANZKOERPER_II = [
-  ex('Goblet Squats', 'Beine', 3, '8-12', '2 min'),
-  ex('KH-Schrägbankdrücken', 'Brust', 3, '8-12', '1-2 min'),
-  ex('Rudern breit', 'Rücken', 3, '8-12', '1 min'),
-  ex('Beinstrecker', 'Beine', 3, '8-12', '1-2 min'),
-  ex('Schulterpresse', 'Schultern', 3, '8-12', '2 min'),
-  ex('Bizepsmaschine', 'Arme', 3, '8-12', '1-2 min'),
-  ex('Reverse Butterfly', 'Rücken', 3, '12-15', '1 min'),
-  ex('Negative Crunches', 'Core', 3, '12-15', '1 min'),
+  ex('Goblet Squats', 'Beine', 2, '8-12', '2 min'),
+  ex('KH-Schrägbankdrücken', 'Brust', 2, '8-12', '1-2 min'),
+  ex('Rudern breit', 'Rücken', 2, '8-12', '1 min'),
+  ex('Beinstrecker', 'Beine', 2, '8-12', '1-2 min'),
+  ex('Schulterpresse', 'Schultern', 2, '8-12', '2 min'),
+  ex('Bizepsmaschine', 'Arme', 2, '8-12', '1-2 min'),
+  ex('Reverse Butterfly', 'Rücken', 2, '12-15', '1 min'),
+  ex('Negative Crunches', 'Core', 2, '12-15', '1 min'),
 ];
 
 const PPL_ESN_PUSH = [
-  ex('LH-Schrägbankdrücken', 'Brust', 4, '8-12', '2 min'),
-  ex('Brustpresse', 'Brust', 3, '8-12', '2 min'),
-  ex('Butterfly', 'Brust', 3, '10-12', '1 min'),
-  ex('KH-Schulterdrücken', 'Schultern', 3, '8-12', '2 min'),
-  ex('Seitheben am Kabelzug', 'Schultern', 4, '10-12', '1 min'),
-  ex('Trizeps Pushdown', 'Arme', 3, '8-12', '1 min'),
+  ex('LH-Schrägbankdrücken', 'Brust', 2, '8-12', '2 min'),
+  ex('Brustpresse', 'Brust', 2, '8-12', '2 min'),
+  ex('Butterfly', 'Brust', 2, '10-12', '1 min'),
+  ex('KH-Schulterdrücken', 'Schultern', 2, '8-12', '2 min'),
+  ex('Seitheben am Kabelzug', 'Schultern', 2, '10-12', '1 min'),
+  ex('Trizeps Pushdown', 'Arme', 2, '8-12', '1 min'),
   ex('Einarmige Kickbacks am Kabelturm', 'Arme', 2, '8-12 je Seite', '1 min'),
 ];
 const PPL_ESN_PULL = [
-  ex('Latzug', 'Rücken', 4, '8-12', '2 min'),
-  ex('T-Bar Rudern', 'Rücken', 3, '8-12', '2 min'),
-  ex('Kabelrudern eng', 'Rücken', 3, '8-12', '1 min'),
-  ex('Hyperextension', 'Rücken', 3, '12-15', '1 min'),
-  ex('Reverse Butterfly', 'Rücken', 3, '12-15', '1 min'),
-  ex('KH-Bizepscurls', 'Arme', 3, '8-12', '1 min'),
-  ex('Bizepsmaschine', 'Arme', 3, '8-12', '1 min'),
+  ex('Latzug', 'Rücken', 2, '8-12', '2 min'),
+  ex('T-Bar Rudern', 'Rücken', 2, '8-12', '2 min'),
+  ex('Kabelrudern eng', 'Rücken', 2, '8-12', '1 min'),
+  ex('Hyperextension', 'Rücken', 2, '12-15', '1 min'),
+  ex('Reverse Butterfly', 'Rücken', 2, '12-15', '1 min'),
+  ex('KH-Bizepscurls', 'Arme', 2, '8-12', '1 min'),
+  ex('Bizepsmaschine', 'Arme', 2, '8-12', '1 min'),
 ];
 const PPL_ESN_LEGS = [
-  ex('Squats', 'Beine', 4, '8-10', '2-3 min'),
-  ex('Beinpresse', 'Beine', 3, '8-10', '2 min'),
-  ex('Beinbeuger', 'Beine', 3, '10-12', '1 min'),
-  ex('Beinstrecker', 'Beine', 3, '10-12', '1 min'),
-  ex('Wadenheben stehend', 'Beine', 4, '15-20', '1 min'),
-  ex('Crunches', 'Core', 3, '15-20', '1 min'),
+  ex('Squats', 'Beine', 2, '8-10', '2-3 min'),
+  ex('Beinpresse', 'Beine', 2, '8-10', '2 min'),
+  ex('Beinbeuger', 'Beine', 2, '10-12', '1 min'),
+  ex('Beinstrecker', 'Beine', 2, '10-12', '1 min'),
+  ex('Wadenheben stehend', 'Beine', 2, '15-20', '1 min'),
+  ex('Crunches', 'Core', 2, '15-20', '1 min'),
   ex('Leg Raises', 'Core', 2, '12-15', '1 min'),
 ];
 
 const OKUK_OBERKOERPER_I = [
-  ex('Latzug', 'Rücken', 3, '8-12', '2 min'),
-  ex('LH-Schrägbankdrücken', 'Brust', 3, '8-12', '2 min'),
-  ex('Seitheben am Kabelzug', 'Schultern', 3, '12-15', '1 min'),
-  ex('LH-Rudern', 'Rücken', 3, '8-12', '2 min'),
+  ex('Latzug', 'Rücken', 2, '8-12', '2 min'),
+  ex('LH-Schrägbankdrücken', 'Brust', 2, '8-12', '2 min'),
+  ex('Seitheben am Kabelzug', 'Schultern', 2, '12-15', '1 min'),
+  ex('LH-Rudern', 'Rücken', 2, '8-12', '2 min'),
   ex('Butterfly', 'Brust', 2, '12-15', '1-2 min'),
-  ex('Reverse Butterfly', 'Rücken', 3, '12-15', '1-2 min'),
-  ex('KH-Bizepscurls', 'Arme', 3, '8-12', '1 min'),
-  ex('Trizeps-Pushdown', 'Arme', 3, '8-12', '1 min'),
+  ex('Reverse Butterfly', 'Rücken', 2, '12-15', '1-2 min'),
+  ex('KH-Bizepscurls', 'Arme', 2, '8-12', '1 min'),
+  ex('Trizeps-Pushdown', 'Arme', 2, '8-12', '1 min'),
 ];
 const OKUK_UNTERKOERPER_I = [
-  ex('Squats', 'Beine', 3, '8-12', '2 min'),
-  ex('Beinpresse', 'Beine', 3, '12-15', '2 min'),
-  ex('Beinbeuger sitzend', 'Beine', 3, '8-12', '1 min'),
-  ex('Beinstrecker', 'Beine', 3, '8-12', '1 min'),
-  ex('Adduktoren', 'Beine', 3, '12-15', '1-2 min'),
-  ex('Wadenheben-Maschine sitzend', 'Beine', 3, '8-12', '1-2 min'),
-  ex('Negativ-Crunches', 'Core', 3, '12-15', '1 min'),
+  ex('Squats', 'Beine', 2, '8-12', '2 min'),
+  ex('Beinpresse', 'Beine', 2, '12-15', '2 min'),
+  ex('Beinbeuger sitzend', 'Beine', 2, '8-12', '1 min'),
+  ex('Beinstrecker', 'Beine', 2, '8-12', '1 min'),
+  ex('Adduktoren', 'Beine', 2, '12-15', '1-2 min'),
+  ex('Wadenheben-Maschine sitzend', 'Beine', 2, '8-12', '1-2 min'),
+  ex('Negativ-Crunches', 'Core', 2, '12-15', '1 min'),
 ];
 const OKUK_OBERKOERPER_II = [
-  ex('T-Bar Rudern', 'Rücken', 3, '8-10', '2-3 min'),
-  ex('KH-Bankdrücken', 'Brust', 3, '6-10', '2 min'),
-  ex('Latzug eng', 'Rücken', 3, '8-12', '1-2 min'),
-  ex('Butterfly am Kabelturm', 'Brust', 3, '12-15', '1-2 min'),
-  ex('Schulterpresse', 'Schultern', 3, '8-12', '1-2 min'),
+  ex('T-Bar Rudern', 'Rücken', 2, '8-10', '2-3 min'),
+  ex('KH-Bankdrücken', 'Brust', 2, '6-10', '2 min'),
+  ex('Latzug eng', 'Rücken', 2, '8-12', '1-2 min'),
+  ex('Butterfly am Kabelturm', 'Brust', 2, '12-15', '1-2 min'),
+  ex('Schulterpresse', 'Schultern', 2, '8-12', '1-2 min'),
   ex('Face Pulls', 'Schultern', 2, '12-15', '1 min'),
-  ex('Bizepscurl-Maschine', 'Arme', 3, '8-12', '1 min'),
-  ex('SZ-Skullcrushers', 'Arme', 3, '8-12', '1 min'),
+  ex('Bizepscurl-Maschine', 'Arme', 2, '8-12', '1 min'),
+  ex('SZ-Skullcrushers', 'Arme', 2, '8-12', '1 min'),
 ];
 const OKUK_UNTERKOERPER_II = [
-  ex('KH-Rumänisches Kreuzheben', 'Beine', 3, '12-15', '2-3 min'),
-  ex('Hackenschmidt-Maschine', 'Beine', 3, '8-12', '2 min'),
-  ex('Multipresse-Hip Thrusts', 'Beine', 3, '8-12', '2 min'),
-  ex('Multipresse-Split Squats', 'Beine', 3, '10-12', '1-2 min'),
-  ex('Wadenheben', 'Beine', 4, '15-20', '1 min'),
-  ex('Beinheben im Liegen', 'Core', 3, '12-15', '1 min'),
-  ex('Crunches', 'Core', 3, '12-15', '1 min'),
+  ex('KH-Rumänisches Kreuzheben', 'Beine', 2, '12-15', '2-3 min'),
+  ex('Hackenschmidt-Maschine', 'Beine', 2, '8-12', '2 min'),
+  ex('Multipresse-Hip Thrusts', 'Beine', 2, '8-12', '2 min'),
+  ex('Multipresse-Split Squats', 'Beine', 2, '10-12', '1-2 min'),
+  ex('Wadenheben', 'Beine', 2, '15-20', '1 min'),
+  ex('Beinheben im Liegen', 'Core', 2, '12-15', '1 min'),
+  ex('Crunches', 'Core', 2, '12-15', '1 min'),
 ];
 
 // ── Bodyweight (kein Equipment nötig) ──
@@ -275,10 +275,10 @@ export function generateProgram(profile) {
   if (goal === 'Kraft') {
     if (exp === 'Profi') {
       return { key: '531', name: '5/3/1 (Wendler)', days: [
-        { name: 'Tag 1: Kniebeugen', exercises: WENDLER_531('Kniebeugen', [ex('Beinstrecker', 'Beine', 3, '10-12', '90 s'), ex('Plank', 'Core', 3, '45 s', '45 s')]) },
-        { name: 'Tag 2: Bankdrücken', exercises: WENDLER_531('Bankdrücken', [ex('Rudern vorgebeugt', 'Rücken', 3, '10', '90 s'), ex('Trizepsdrücken', 'Arme', 3, '12', '60 s')]) },
-        { name: 'Tag 3: Kreuzheben', exercises: WENDLER_531('Kreuzheben', [ex('Klimmzüge', 'Rücken', 3, '8-10', '90 s'), ex('Bizepscurls', 'Arme', 3, '12', '60 s')]) },
-        { name: 'Tag 4: Schulterdrücken', exercises: WENDLER_531('Schulterdrücken', [ex('Seitheben', 'Schultern', 3, '12-15', '60 s'), ex('Face Pulls', 'Schultern', 3, '15', '60 s')]) },
+        { name: 'Tag 1: Kniebeugen', exercises: WENDLER_531('Kniebeugen', [ex('Beinstrecker', 'Beine', 2, '10-12', '90 s'), ex('Plank', 'Core', 2, '45 s', '45 s')]) },
+        { name: 'Tag 2: Bankdrücken', exercises: WENDLER_531('Bankdrücken', [ex('Rudern vorgebeugt', 'Rücken', 2, '10', '90 s'), ex('Trizepsdrücken', 'Arme', 2, '12', '60 s')]) },
+        { name: 'Tag 3: Kreuzheben', exercises: WENDLER_531('Kreuzheben', [ex('Klimmzüge', 'Rücken', 2, '8-10', '90 s'), ex('Bizepscurls', 'Arme', 2, '12', '60 s')]) },
+        { name: 'Tag 4: Schulterdrücken', exercises: WENDLER_531('Schulterdrücken', [ex('Seitheben', 'Schultern', 2, '12-15', '60 s'), ex('Face Pulls', 'Schultern', 2, '15', '60 s')]) },
       ] };
     }
     return { key: 'phul', name: 'PHUL (Power + Hypertrophie)', days: [
