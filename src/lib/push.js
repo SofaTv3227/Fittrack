@@ -38,10 +38,11 @@ export async function subscribeToPush() {
 }
 
 export async function saveSubscription(subscription, { time, days, message }) {
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
   const res = await fetch('/api/subscribe', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ subscription, time, days, message }),
+    body: JSON.stringify({ subscription, time, days, message, timezone }),
   });
   if (!res.ok) throw new Error('Konnte Abo nicht speichern.');
   return res.json();
