@@ -1,14 +1,12 @@
-import { HashRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider, useApp } from './store/AppContext';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
-import Plan from './pages/Plan';
+import Training from './pages/Training';
 import Logbook from './pages/Logbook';
 import Nutrition from './pages/Nutrition';
 import Devices from './pages/Devices';
-import RunningPlan from './pages/RunningPlan';
-import BasketballPlan from './pages/BasketballPlan';
 
 function Gate({ children }) {
   const { ready } = useApp();
@@ -31,12 +29,17 @@ export default function App() {
             <Route element={<Layout />}>
               <Route path="/" element={<Dashboard />} />
               <Route path="/profil" element={<Profile />} />
-              <Route path="/plan" element={<Plan />} />
               <Route path="/logbuch" element={<Logbook />} />
               <Route path="/ernaehrung" element={<Nutrition />} />
               <Route path="/geraete" element={<Devices />} />
-              <Route path="/laufplan" element={<RunningPlan />} />
-              <Route path="/basketball" element={<BasketballPlan />} />
+
+              <Route path="/training/:tab" element={<Training />} />
+              <Route path="/training" element={<Training />} />
+
+              {/* Alte Direktlinks bleiben funktionsfähig und führen zum jeweiligen Trainings-Tab. */}
+              <Route path="/plan" element={<Navigate to="/training/gym" replace />} />
+              <Route path="/laufplan" element={<Navigate to="/training/laufen" replace />} />
+              <Route path="/basketball" element={<Navigate to="/training/basketball" replace />} />
             </Route>
           </Routes>
         </HashRouter>
