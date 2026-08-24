@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useApp } from '../store/AppContext';
-import { generateProgram, MUSCLE_GROUPS } from '../lib/workoutPrograms';
+import { MUSCLE_GROUPS } from '../lib/workoutPrograms';
 import { exportPlanToPdf } from '../lib/pdf';
-import { Plus, Trash2, RefreshCw, Download } from 'lucide-react';
+import { Plus, Trash2, RefreshCw, Download, PenLine } from 'lucide-react';
 
 function ExerciseRow({ ex, onChange, onDelete }) {
   return (
@@ -20,6 +20,10 @@ function ExerciseRow({ ex, onChange, onDelete }) {
   );
 }
 
+function emptyDay(n) {
+  return { name: `Tag ${n}`, exercises: [] };
+}
+
 export default function Plan() {
   const { profile, plan, savePlan, regeneratePlan } = useApp();
   const [busy, setBusy] = useState(false);
@@ -28,6 +32,23 @@ export default function Plan() {
     setBusy(true);
     await regeneratePlan();
     setBusy(false);
+  };
+
+  const handleCreateCustom = () => {
+    savePlan({ key: 'custom', name: 'Mein eigener Plan', days: [emptyDay(1)] });
+  };
+
+  const updateDayName = (dayIdx, name) => {
+    const days = plan.days.map((d, i) => (i === dayIdx ? { ...d, name } : d));
+    savePlan({ ...plan, days });
+  };
+
+  const addDay = () => {
+    savePlan({ ...plan, days: [...plan.days, emptyDay(plan.days.length + 1)] });
+  };
+
+  const deleteDay = (dayIdx) => {
+    savePlan({ ...plan, days: plan.days.filter((_, i) => i !== dayIdx) });
   };
 
   const updateExercise = (dayIdx, exIdx, next) => {
@@ -57,11 +78,16 @@ export default function Plan() {
 
   if (!plan) {
     return (
-      <div className="animate-in card text-center py-16">
+      <div className="animate-in card text-center py-16 flex flex-col items-center gap-3">
         <p style={{ color: 'var(--text-muted)' }}>Noch kein Plan generiert.</p>
-        <button className="btn btn-accent mt-4" onClick={handleRegenerate} disabled={busy}>
-          Trainingsplan generieren
-        </button>
+        <div className="flex gap-2">
+          <button className="btn btn-accent" onClick={handleRegenerate} disabled={busy}>
+            Trainingsplan generieren
+          </button>
+          <button className="btn" onClick={handleCreateCustom}>
+            <PenLine size={15} /> Eigenen Plan erstellen
+          </button>
+        </div>
       </div>
     );
   }
@@ -72,12 +98,17 @@ export default function Plan() {
         <div>
           <h1 className="text-2xl font-extrabold">{plan.name}</h1>
           <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
-            Basierend auf: {profile.goal} · {profile.experience} · {profile.daysPerWeek} Tage/Woche
+            {plan.key === 'custom'
+              ? 'Selbst erstellter Trainingsplan'
+              : `Basierend auf: ${profile.goal} · ${profile.experience} · ${profile.daysPerWeek} Tage/Woche`}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <button className="btn" onClick={handleRegenerate} disabled={busy}>
             <RefreshCw size={15} className={busy ? 'animate-spin' : ''} /> Neu generieren
+          </button>
+          <button className="btn" onClick={handleCreateCustom}>
+            <PenLine size={15} /> Eigenen Plan erstellen
           </button>
           <button className="btn btn-accent" onClick={() => exportPlanToPdf(plan, profile.name)}>
             <Download size={15} /> Als PDF
@@ -88,7 +119,18 @@ export default function Plan() {
       <div className="grid lg:grid-cols-2 gap-4">
         {plan.days.map((day, dayIdx) => (
           <div key={dayIdx} className="card">
-            <h3 className="font-bold mb-3">{day.name}</h3>
+            <div className="flex items-center gap-2 mb-3">
+              <input
+                className="input font-bold flex-1"
+                value={day.name}
+                onChange={(e) => updateDayName(dayIdx, e.target.value)}
+              />
+              {plan.days.length > 1 && (
+                <button className="btn btn-ghost btn-danger btn-sm" onClick={() => deleteDay(dayIdx)}>
+                  <Trash2 size={15} />
+                </button>
+              )}
+            </div>
             <div>
               {day.exercises.map((ex, exIdx) => (
                 <ExerciseRow
@@ -98,12 +140,23 @@ export default function Plan() {
                   onDelete={() => deleteExercise(dayIdx, exIdx)}
                 />
               ))}
+              {day.exercises.length === 0 && (
+                <p className="text-sm py-2" style={{ color: 'var(--text-muted)' }}>Noch keine Übungen für diesen Tag.</p>
+              )}
             </div>
             <button className="btn btn-ghost btn-sm mt-3" onClick={() => addExercise(dayIdx)}>
               <Plus size={14} /> Übung hinzufügen
             </button>
           </div>
         ))}
+
+        <button
+          className="card flex items-center justify-center gap-2 py-8 border-dashed"
+          style={{ borderStyle: 'dashed', color: 'var(--text-muted)' }}
+          onClick={addDay}
+        >
+          <Plus size={18} /> Trainingstag hinzufügen
+        </button>
       </div>
     </div>
   );
