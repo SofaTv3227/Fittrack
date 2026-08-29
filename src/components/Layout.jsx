@@ -1,14 +1,37 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { LayoutDashboard, User, Dumbbell, NotebookPen, Apple, Watch, Flame } from 'lucide-react';
+import { Home, Dumbbell, LineChart, Target, User, NotebookPen, Apple, Watch, Flame } from 'lucide-react';
 
-const NAV = [
-  { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { to: '/profil', label: 'Profil', icon: User },
+const PRIMARY_NAV = [
+  { to: '/', label: 'Home', icon: Home, end: true },
   { to: '/training', label: 'Training', icon: Dumbbell },
+  { to: '/fortschritt', label: 'Fortschritt', icon: LineChart },
+  { to: '/ziele', label: 'Ziele', icon: Target },
+  { to: '/profil', label: 'Profil', icon: User },
+];
+
+const SECONDARY_NAV = [
   { to: '/logbuch', label: 'Logbuch', icon: NotebookPen },
   { to: '/ernaehrung', label: 'Ernährung', icon: Apple },
   { to: '/geraete', label: 'Geräte', icon: Watch },
 ];
+
+function NavItem({ to, label, icon: Icon, end }) {
+  return (
+    <NavLink
+      to={to}
+      end={end}
+      className={({ isActive }) =>
+        `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+          isActive ? 'text-[var(--accent)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+        }`
+      }
+      style={({ isActive }) => ({ background: isActive ? 'var(--accent-soft)' : 'transparent' })}
+    >
+      <Icon size={18} />
+      {label}
+    </NavLink>
+  );
+}
 
 export default function Layout() {
   return (
@@ -22,22 +45,11 @@ export default function Layout() {
           </div>
           <span className="text-lg font-extrabold tracking-tight">FitTrack</span>
         </div>
-        {NAV.map(({ to, label, icon: Icon, end }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={end}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                isActive ? 'text-[var(--accent)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
-              }`
-            }
-            style={({ isActive }) => ({ background: isActive ? 'var(--accent-soft)' : 'transparent' })}
-          >
-            <Icon size={18} />
-            {label}
-          </NavLink>
-        ))}
+        {PRIMARY_NAV.map((item) => <NavItem key={item.to} {...item} />)}
+
+        <div className="my-3 border-t" style={{ borderColor: 'var(--border)' }} />
+        {SECONDARY_NAV.map((item) => <NavItem key={item.to} {...item} />)}
+
         <div className="mt-auto px-1 text-xs" style={{ color: 'var(--text-muted)' }}>
           Alle Daten lokal gespeichert · offline verfügbar
         </div>
@@ -49,7 +61,7 @@ export default function Layout() {
 
       <nav className="md:hidden fixed bottom-0 left-0 right-0 flex justify-around items-center py-2 border-t z-20"
         style={{ background: 'var(--bg-elevated)', borderColor: 'var(--border)' }}>
-        {NAV.map(({ to, label, icon: Icon, end }) => (
+        {PRIMARY_NAV.map(({ to, label, icon: Icon, end }) => (
           <NavLink
             key={to}
             to={to}

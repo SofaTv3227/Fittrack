@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useApp } from '../store/AppContext';
+import { useToast } from '../components/Toast';
 import {
   LEVELS, WEEKDAYS, EXERCISE_POOLS, getWeekPlan, sessionExercises, categoryIcon, weekPlanStats,
 } from '../lib/basketballPlans';
@@ -153,7 +154,8 @@ function SessionExerciseRow({ item, onToggleDone, onToggleSkip, onEditUnit, onRe
 }
 
 export default function BasketballPlan() {
-  const { bballLogs, addBballLog, todayStr } = useApp();
+  const { bballLogs, addBballLog, todayStr, addXp, XP_RULES } = useApp();
+  const showToast = useToast();
   const [levelKey, setLevelKey] = useState('anfaenger');
   const [days, setDays] = useState(3);
   const [active, setActive] = useState(null); // { dayIdx, day, items, elapsedSec, paused, startedAt }
@@ -219,6 +221,12 @@ export default function BasketballPlan() {
       notes: form.notes,
       completedAt: new Date().toISOString(),
     });
+    const madeAttempts = Number(form.attempts) || 0;
+    const madeMakes = Number(form.makes) || 0;
+    let xp = XP_RULES.WORKOUT_COMPLETE;
+    if (madeAttempts > 0 && madeMakes / madeAttempts >= 0.7) xp += XP_RULES.PERSONAL_RECORD;
+    await addXp(xp);
+    showToast('Training gespeichert ✓');
     setCompleting(false);
     setActive(null);
   };

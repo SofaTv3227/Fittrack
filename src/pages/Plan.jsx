@@ -1,9 +1,12 @@
 import { useMemo, useState } from 'react';
 import { useApp } from '../store/AppContext';
+import { useToast } from '../components/Toast';
 import { exportPlanToPdf } from '../lib/pdf';
 import { planStats, estimateDayMinutes, dayMuscleGroups, formatMinutes } from '../lib/planStats';
 import ExerciseRow from '../components/ExerciseRow';
-import { Plus, RefreshCw, Download, PenLine, Check, Trash2, Dumbbell, ListChecks, CalendarDays, Clock3, Layers } from 'lucide-react';
+import WorkoutSession from '../components/WorkoutSession';
+import WorkoutComplete from '../components/WorkoutComplete';
+import { Plus, RefreshCw, Download, PenLine, Check, Trash2, Dumbbell, ListChecks, CalendarDays, Clock3, Layers, Play } from 'lucide-react';
 
 function emptyDay(n) {
   return { name: `Tag ${n}`, exercises: [] };
@@ -22,13 +25,40 @@ function StatChip({ icon: Icon, label, value }) {
 }
 
 export default function Plan() {
-  const { profile, plan, savePlan, regeneratePlan } = useApp();
+  const { profile, plan, savePlan, regeneratePlan, addLog, logs, addXp, XP_RULES, todayStr } = useApp();
+  const showToast = useToast();
   const [busy, setBusy] = useState(false);
   const [editingDay, setEditingDay] = useState(null);
   const [dragSrc, setDragSrc] = useState(null); // { dayIdx, exIdx }
   const [dragOver, setDragOver] = useState(null); // { dayIdx, exIdx }
+  const [activeDayIdx, setActiveDayIdx] = useState(null);
+  const [completion, setCompletion] = useState(null);
 
   const stats = useMemo(() => planStats(plan), [plan]);
+
+  const handleFinishWorkout = async ({ exercises, durationMin }) => {
+    if (!exercises.length) { setActiveDayIdx(null); return; }
+    const day = plan.days[activeDayIdx];
+
+    const volume = exercises.reduce((s, ex) => s + ex.sets.reduce((s2, set) => s2 + (Number(set.reps) || 0) * (Number(set.weight) || 0), 0), 0);
+    const setCount = exercises.reduce((s, ex) => s + ex.sets.length, 0);
+
+    const prs = [];
+    exercises.forEach((ex) => {
+      const sessionMax = Math.max(0, ...ex.sets.map((s) => Number(s.weight) || 0));
+      const priorMax = Math.max(0, ...logs.flatMap((l) => l.exercises.filter((e) => e.name === ex.name).flatMap((e) => e.sets.map((s) => Number(s.weight) || 0))));
+      if (sessionMax > 0 && sessionMax > priorMax) prs.push({ name: ex.name, weight: sessionMax });
+    });
+
+    await addLog({ date: todayStr(), type: day.name, exercises, durationMin });
+    const xp = XP_RULES.WORKOUT_COMPLETE + prs.length * XP_RULES.PERSONAL_RECORD;
+    await addXp(xp);
+    showToast('Training gespeichert ✓');
+    if (prs.length) showToast('Neuer persönlicher Rekord 🏆');
+
+    setCompletion({ durationMin, exerciseCount: exercises.length, setCount, volume, prs, xp });
+    setActiveDayIdx(null);
+  };
 
   const handleRegenerate = async () => {
     setBusy(true);
@@ -113,6 +143,22 @@ export default function Plan() {
     );
   }
 
+  if (completion) {
+    return <div className="animate-in"><WorkoutComplete summary={completion} onDone={() => setCompletion(null)} /></div>;
+  }
+
+  if (activeDayIdx !== null) {
+    return (
+      <div className="animate-in">
+        <WorkoutSession
+          day={plan.days[activeDayIdx]}
+          onFinish={handleFinishWorkout}
+          onCancel={() => setActiveDayIdx(null)}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="animate-in flex flex-col gap-6">
       {/* Header */}
@@ -187,9 +233,14 @@ export default function Plan() {
                 )}
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center flex-wrap">
                 <span className="chip">{day.exercises.length} Übungen</span>
                 {minutes > 0 && <span className="chip" style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)' }}>ca. {minutes} Min</span>}
+                {day.exercises.length > 0 && (
+                  <button className="btn btn-accent btn-sm ml-auto" onClick={() => setActiveDayIdx(dayIdx)}>
+                    <Play size={13} /> Training starten
+                  </button>
+                )}
               </div>
 
               <div>

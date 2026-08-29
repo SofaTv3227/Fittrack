@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, useCallback, useMemo } 
 import { db, TABLES } from '../lib/db';
 import { generateProgram } from '../lib/workoutPrograms';
 import { calcTargetCalories, calcMacroTargets } from '../lib/calculations';
+import { levelFromXp, allTrainingDates, calcStreak, calcLongestStreak, XP_RULES } from '../lib/gamification';
 
 const AppContext = createContext(null);
 
@@ -32,10 +33,13 @@ export function AppProvider({ children }) {
   const [devices, setDevices] = useState([]);
   const [deviceData, setDeviceData] = useState([]);
   const [bballLogs, setBballLogs] = useState([]);
+  const [runLogs, setRunLogs] = useState([]);
+  const [goals, setGoals] = useState([]);
+  const [gamification, setGamificationState] = useState({ id: TABLES.GAMIFICATION_ID, xp: 0 });
 
   useEffect(() => {
     (async () => {
-      const [p, s, pl, l, f, r, m, w, d, dd, bl] = await Promise.all([
+      const [p, s, pl, l, f, r, m, w, d, dd, bl, rl, gl, gam] = await Promise.all([
         db.profile.get(TABLES.PROFILE_ID),
         db.settings.get(TABLES.SETTINGS_ID),
         db.plan.get(TABLES.PLAN_ID),
@@ -47,12 +51,17 @@ export function AppProvider({ children }) {
         db.devices.toArray(),
         db.deviceData.toArray(),
         db.bballLogs.toArray(),
+        db.runLogs.toArray(),
+        db.goals.toArray(),
+        db.gamification.get(TABLES.GAMIFICATION_ID),
       ]);
       if (p) setProfileState(p);
       if (s) setSettingsState(s);
       if (pl) setPlanState(pl);
       setLogs(l); setFoods(f); setRecipes(r); setMeals(m); setWater(w);
       setDevices(d); setDeviceData(dd); setBballLogs(bl);
+      setRunLogs(rl); setGoals(gl);
+      if (gam) setGamificationState(gam);
       setReady(true);
     })();
   }, []);
@@ -182,6 +191,51 @@ export function AppProvider({ children }) {
     setBballLogs((prev) => prev.filter((l) => l.id !== id));
   }, []);
 
+  // Laufprotokolle (echte absolvierte Läufe, unabhängig vom Wochenplan-Vorschlag)
+  const addRunLog = useCallback(async (log) => {
+    const id = await db.runLogs.add(log);
+    const rec = { ...log, id };
+    setRunLogs((prev) => [...prev, rec]);
+    return rec;
+  }, []);
+  const deleteRunLog = useCallback(async (id) => {
+    await db.runLogs.delete(id);
+    setRunLogs((prev) => prev.filter((l) => l.id !== id));
+  }, []);
+
+  // Ziele
+  const addGoal = useCallback(async (goal) => {
+    const id = await db.goals.add(goal);
+    const rec = { ...goal, id };
+    setGoals((prev) => [...prev, rec]);
+    return rec;
+  }, []);
+  const updateGoal = useCallback(async (id, next) => {
+    await db.goals.update(id, next);
+    setGoals((prev) => prev.map((g) => (g.id === id ? { ...g, ...next } : g)));
+  }, []);
+  const deleteGoal = useCallback(async (id) => {
+    await db.goals.delete(id);
+    setGoals((prev) => prev.filter((g) => g.id !== id));
+  }, []);
+
+  // Gamification (XP)
+  const addXp = useCallback(async (amount) => {
+    setGamificationState((prev) => {
+      const merged = { id: TABLES.GAMIFICATION_ID, xp: (prev.xp || 0) + amount };
+      db.gamification.put(merged);
+      return merged;
+    });
+  }, []);
+
+  const trainingDates = useMemo(
+    () => allTrainingDates({ logs, runLogs, bballLogs }),
+    [logs, runLogs, bballLogs]
+  );
+  const streak = useMemo(() => calcStreak(trainingDates), [trainingDates]);
+  const longestStreak = useMemo(() => calcLongestStreak(trainingDates), [trainingDates]);
+  const levelInfo = useMemo(() => levelFromXp(gamification.xp || 0), [gamification]);
+
   const targetCalories = useMemo(
     () => settings.calorieOverride ?? calcTargetCalories(profile),
     [profile, settings]
@@ -193,12 +247,15 @@ export function AppProvider({ children }) {
 
   const value = {
     ready, profile, settings, plan, logs, foods, recipes, meals, water, devices, deviceData, bballLogs,
+    runLogs, goals, gamification, streak, longestStreak, levelInfo, trainingDates, XP_RULES,
     saveProfile, saveSettings, regeneratePlan, savePlan,
     addLog, updateLog, deleteLog,
     addFood, addRecipe, deleteRecipe,
     addMeal, updateMeal, deleteMeal,
     setWaterForDate, setDeviceState, saveDeviceData,
     addBballLog, deleteBballLog,
+    addRunLog, deleteRunLog,
+    addGoal, updateGoal, deleteGoal, addXp,
     targetCalories, targetMacros, todayStr,
   };
 

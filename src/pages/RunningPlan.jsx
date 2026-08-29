@@ -1,12 +1,65 @@
 import { useMemo, useState } from 'react';
+import { useApp } from '../store/AppContext';
+import { useToast } from '../components/Toast';
 import { LEVELS, getRunningPlan, planStats } from '../lib/runningPlans';
-import { Footprints, Clock, Route, Zap, BedDouble, Heart, Gauge } from 'lucide-react';
+import { Footprints, Clock, Route, Zap, BedDouble, Heart, Gauge, Play, Check } from 'lucide-react';
 
 const DAY_OPTIONS = [2, 3, 4, 5, 6, 7];
 
 const INTENSITY_LABEL = { niedrig: 'Niedrig', mittel: 'Mittel', hoch: 'Hoch' };
 
-function DayCard({ session, color, colorSoft }) {
+function paceLabel(km, min) {
+  if (!km || !min) return '–';
+  const paceMin = min / km;
+  const m = Math.floor(paceMin);
+  const s = Math.round((paceMin - m) * 60);
+  return `${m}:${String(s).padStart(2, '0')} min/km`;
+}
+
+function RunLogForm({ session, onSave, onCancel }) {
+  const [km, setKm] = useState(session?.distanceKm || '');
+  const [min, setMin] = useState(session?.durationMin || '');
+  const [hr, setHr] = useState('');
+  const [kcal, setKcal] = useState('');
+
+  return (
+    <div className="card flex flex-col gap-3">
+      <span className="eyebrow">{session ? session.type : 'Lauf loggen'}</span>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="label">Distanz (km)</label>
+          <input className="input" type="number" step="0.01" value={km} onChange={(e) => setKm(e.target.value)} />
+        </div>
+        <div>
+          <label className="label">Zeit (Min)</label>
+          <input className="input" type="number" value={min} onChange={(e) => setMin(e.target.value)} />
+        </div>
+        <div>
+          <label className="label">Ø Herzfrequenz (optional)</label>
+          <input className="input" type="number" value={hr} onChange={(e) => setHr(e.target.value)} />
+        </div>
+        <div>
+          <label className="label">Kalorien (optional)</label>
+          <input className="input" type="number" value={kcal} onChange={(e) => setKcal(e.target.value)} />
+        </div>
+      </div>
+      <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-muted)' }}>
+        <Gauge size={14} /> Pace: <b style={{ color: 'var(--text)' }}>{paceLabel(Number(km), Number(min))}</b>
+      </div>
+      <div className="flex gap-2">
+        <button className="btn" onClick={onCancel}>Abbrechen</button>
+        <button
+          className="btn btn-accent"
+          onClick={() => onSave({ distanceKm: Number(km) || 0, durationMin: Number(min) || 0, avgHr: hr ? Number(hr) : null, kcal: kcal ? Number(kcal) : null })}
+        >
+          <Check size={14} /> Lauf abschließen
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function DayCard({ session, color, colorSoft, onStart }) {
   if (session.isRest) {
     return (
       <div className="card flex flex-col items-center justify-center text-center gap-2 py-8" style={{ opacity: 0.6 }}>
@@ -37,6 +90,7 @@ function DayCard({ session, color, colorSoft }) {
           {session.pace && <span className="flex items-center gap-1.5"><Gauge size={12} /> {session.pace}</span>}
         </div>
       )}
+      <button className="btn btn-accent btn-sm mt-1" onClick={onStart}><Play size={13} /> Lauf starten</button>
     </div>
   );
 }
@@ -56,8 +110,11 @@ function StatTile({ icon: Icon, label, value, color }) {
 }
 
 export default function RunningPlan() {
+  const { runLogs, addRunLog, addXp, XP_RULES, todayStr } = useApp();
+  const showToast = useToast();
   const [levelKey, setLevelKey] = useState('anfaenger');
   const [days, setDays] = useState(3);
+  const [loggingSession, setLoggingSession] = useState(null); // session obj or 'adhoc' or null
 
   const level = LEVELS.find((l) => l.key === levelKey);
   const weekPlan = useMemo(() => getRunningPlan(levelKey, days), [levelKey, days]);
@@ -66,6 +123,23 @@ export default function RunningPlan() {
   const hours = stats ? Math.floor(stats.totalMin / 60) : 0;
   const mins = stats ? stats.totalMin % 60 : 0;
   const durationLabel = stats ? (hours > 0 ? `${hours} h ${mins > 0 ? mins + ' min' : ''}`.trim() : `${mins} min`) : '–';
+
+  const handleSaveRun = async (data) => {
+    const priorBest5k = Math.min(...runLogs.filter((r) => r.distanceKm >= 4.9).map((r) => r.durationMin), Infinity);
+    const isNewLongest = data.distanceKm > Math.max(0, ...runLogs.map((r) => r.distanceKm));
+
+    await addRunLog({ date: todayStr(), ...data, levelKey, days });
+    let xp = XP_RULES.WORKOUT_COMPLETE;
+    if (data.distanceKm >= 10) xp += XP_RULES.RUN_10K;
+    if (data.distanceKm >= 4.9 && data.durationMin < priorBest5k) xp += XP_RULES.PERSONAL_RECORD;
+    await addXp(xp);
+
+    showToast('Training gespeichert ✓');
+    if (data.distanceKm >= 4.9 && data.durationMin < priorBest5k) showToast('Neue persönliche Bestzeit 🏆');
+    else if (isNewLongest) showToast('Neuer persönlicher Rekord 🏆');
+
+    setLoggingSession(null);
+  };
 
   return (
     <div className="animate-in flex flex-col gap-6">
@@ -128,9 +202,17 @@ export default function RunningPlan() {
         </div>
       )}
 
+      {loggingSession && (
+        <RunLogForm
+          session={loggingSession === 'adhoc' ? null : loggingSession}
+          onSave={handleSaveRun}
+          onCancel={() => setLoggingSession(null)}
+        />
+      )}
+
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {weekPlan?.map((session) => (
-          <DayCard key={session.day} session={session} color={level.color} colorSoft={level.colorSoft} />
+          <DayCard key={session.day} session={session} color={level.color} colorSoft={level.colorSoft} onStart={() => setLoggingSession(session)} />
         ))}
       </div>
 
